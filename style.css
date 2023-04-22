@@ -237,7 +237,7 @@ select {
 }
 
 .footer {
-  position: absolute;
+  position: relative;
   padding: 1rem;
   width: 100%;
   bottom: 0;
