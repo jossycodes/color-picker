@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title></title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+
+  <div>
+    <div class="box">
+      <canvas id="canvas"></canvas>
+      <div id="canvas2">
+        <!--<div class="pickers" id="m-picker"></div>
+        <!--<div class="pickers" id="c-picker"></div>
+        <div class="pickers" id="mch-picker"></div>-->
+      </div>
+    </div>
+    <div id="controls">
+      <div class="col">
+        <input id="depth" type="range" step="0.1" min="0" max="100" value="50">
+      </div>
+      <div class="col">
+        <div class="item">
+          <div id="main"></div>
+        </div>
+        <div class="item">
+          <input id="code" type="text" value="#FFFFFF">
+        </div>
+      </div>
+    </div>
+    <div class="col">
+      <div id="type">single</div>
+    </div>
+    <div id="plates">
+
+    </div>
+  </div>
+
+  <!-- custom dialog-->
+  <div id="dialog" class="hide">
+    <ul>
+      <li data-name="single" class="list-item">Single</li>
+      <li data-name="complimentary" class="list-item">Complimentary</li>
+      <li data-name="monochromic" class="list-item">Monochromic</li>
+      <li data-name="analogous" class="list-item">Analogous</li>
+      <li data-name="triadic" class="list-item">Triadic</li>
+      <li data-name="tedradic" class="list-item">Tedradic</li>
+    </ul>
+  </div>
+  <script type="module" src="color.js"></script>
+</body>
+
+</html>
