@@ -16,6 +16,7 @@
 
 body {
   margin: 0;
+  min-height: 100vh;
 }
 
 div {}
@@ -103,6 +104,7 @@ input[type=range]::-webkit-slider-runnable-track {
   background: var(--rangebg);
   transition: .1s;
   border: 1px solid #cccccc;
+  cursor: pointer;
 }
 
 #main {
@@ -162,6 +164,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
+  z-index: 1;
 }
 #dialog ul {
   background: #fff;
@@ -171,7 +174,7 @@ select {
   margin: 0;
   list-style: none;
   padding: 0;
-  transform: translateY(20rem);
+  transform: translateY(25rem);
   transition: 0.2s;
 }
 .slide-in {
@@ -231,4 +234,14 @@ select {
   width: 100%;
   box-sizing: border-box;
   
+}
+
+.footer {
+  position: absolute;
+  padding: 1rem;
+  width: 100%;
+  bottom: 0;
+  text-align: center;
+  font-size: .8rem;
+  z-index: 0;
 }
