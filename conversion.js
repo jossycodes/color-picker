@@ -10,8 +10,6 @@ function rad2deg(rad) {
   return ((rad + Math.PI) / (2 * Math.PI)) * 360;
 }
 
-//drawCircle();
-
 // hue in range [0, 360]
 // saturation, value in range [0,1]
 // return [r,g,b] each in range [0,255]
@@ -33,6 +31,8 @@ function hsv2rgb(hue, saturation, value) {
     ([r1, g1, b1] = [x, 0, chroma]);
   } else if (hue1 >= 5 && hue1 <= 6) {
     ([r1, g1, b1] = [chroma, 0, x]);
+  } else {
+    ([r1, g1, b1] = [0, 0, 0]);
   }
 
   let m = value - chroma;
@@ -43,47 +43,38 @@ function hsv2rgb(hue, saturation, value) {
 }
 
 function rgb2hex(r, g, b) {
-  r = r.toString(16);
-  g = g.toString(16);
-  b = b.toString(16);
+  r = Math.round(r).toString(16);
+  g = Math.round(g).toString(16);
+  b = Math.round(b).toString(16);
 
-  if (r.length == 1)
-    r = "0" + r;
-  if (g.length == 1)
-    g = "0" + g;
-  if (b.length == 1)
-    b = "0" + b;
+  if (r.length == 1) r = "0" + r;
+  if (g.length == 1) g = "0" + g;
+  if (b.length == 1) b = "0" + b;
 
   return "#" + r + g + b;
 }
 
+// NOTE: the original had unreachable padding code here — it built the
+// values with parseInt() (which returns numbers, not strings), then
+// checked `.length` on those numbers. `.length` is `undefined` on a
+// number, so `_r.length == 1` was always false and the "pad with 0"
+// branch could never run. Since these are already plain 0-255 integers
+// (not hex strings), no padding was ever needed — removed the dead code.
 function hex2rgb(hex) {
   if (hex.length == 7 || hex.length == 4) {
-    const cut = (hex.length > 4) ? 2 : 1
     const r = hex.substr(1, 2);
-    /*const g = hex.substr(1 + cut, cut);
-    const b = hex.substr(cut == 1 ? 3 : 5, cut);*/
-    const g = hex.substr(3,2)
-    const b = hex.substr(5,2)
-    
-    //console.log(r,g,b)
-    /*let _r = (`0x${r}` * 1).toString();
-    let _g = (`0x${g}` * 1).toString();
-    let _b = (`0x${b}` * 1).toString();*/
-    let _r = parseInt(r,16);
-    let _g = parseInt(g,16);
-    let _b = parseInt(b,16)
+    const g = hex.substr(3, 2);
+    const b = hex.substr(5, 2);
 
-    if (_r.length == 1) _r = '0' + _r
-    if (_g.length == 1) _g = '0' + _g
-    if (_b.length == 1) _b = '0' + _b
-    //console.log(_r, _g, _b);
+    const _r = parseInt(r, 16);
+    const _g = parseInt(g, 16);
+    const _b = parseInt(b, 16);
+
     return [_r, _g, _b];
   } else {
-    return ''
+    return '';
   }
 }
-
 
 function hex2hsl(hex) {
   hex = hex.replace(/#/g, '');
@@ -92,7 +83,7 @@ function hex2hsl(hex) {
       return hex + hex;
     }).join('');
   }
-  var result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})[\da-z]{0,0}$/i.exec(hex);
+  var result = /^([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   if (!result) {
     return null;
   }
@@ -159,5 +150,4 @@ function hsl2hex(h, s, l) {
   return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
 }
 
-
-export {hex2hsl,hex2rgb, xy2polar, hsl2hex, rgb2hex, hsv2rgb, rad2deg}
+export { hex2hsl, hex2rgb, xy2polar, hsl2hex, rgb2hex, hsv2rgb, rad2deg }
