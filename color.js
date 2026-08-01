@@ -47,20 +47,25 @@ function layoutCanvas() {
   canvas.style.height = _canvas.style.height = size + 'px';
   canvas.style.width = _canvas.style.width = size + 'px';
 
-  canvas.width = size * dpi;
-  canvas.height = size * dpi;
-  _canvas.width = size * dpi;
-  _canvas.height = size * dpi;
-
   ctx.setTransform(1, 0, 0, 1, 0, 0);
 
-  // BUG FIX: `radius` previously equaled `size` (a CSS-pixel value) and
-  // the ImageData was allocated at 2*radius square. That's a device-pixel
-  // buffer, so on any dpi other than exactly 2 the wheel was either far
-  // larger than the actual canvas (getting clipped to a quarter-circle
-  // sliver) or far smaller than it (leaving a tiny wheel in the corner).
-  // radius now derives from the real device-pixel canvas size.
-  radius = (size * dpi) / 2;
+  // BUG FIX: `radius` used to be computed as `size * dpi / 2`. That's
+  // only an integer when `size * dpi` happens to be even -- but `dpi`
+  // (devicePixelRatio) is frequently fractional in the real world (OS
+  // display scaling at 125%/150%/250% on Windows, some Android phones,
+  // non-100% browser zoom all produce dpi values like 1.5 or 2.5). When
+  // radius came out fractional, `createImageData(2*radius, 2*radius)`
+  // silently rounded to an integer width while the fill loop below kept
+  // using the *unrounded* value as its row length -- so every row after
+  // the first landed a few pixels off from where it actually needed to
+  // be, tearing the wheel into diagonal strips and making sampled colors
+  // go erratic near the seam. Rounding radius to an integer FIRST, and
+  // deriving the canvas buffer size from that same integer, guarantees
+  // the fill's row length and the buffer's real width always agree.
+  radius = Math.round((size * dpi) / 2);
+
+  canvas.width = canvas.height = radius * 2;
+  _canvas.width = _canvas.height = radius * 2;
 
   drawCircle();
 }
@@ -71,6 +76,12 @@ function drawCircle() {
   pixels = [];
   image = ctx.createImageData(2 * radius, 2 * radius);
   data = image.data;
+
+  // Device-pixels-per-CSS-pixel, using the buffer size actually in effect
+  // (canvas.width / size) rather than raw `dpi`. Since radius is rounded,
+  // canvas.width can be off from size*dpi by a fraction of a pixel; using
+  // the real ratio keeps picker positions exactly aligned with the wheel.
+  const scale = canvas.width / size;
 
   for (let x = -radius; x < radius; x++) {
     for (let y = -radius; y < radius; y++) {
@@ -105,10 +116,10 @@ function drawCircle() {
       // BUG FIX: this used to be `(adjustedX / 4) % radius * 2`, an odd
       // formula left over from an earlier canvas size that no longer
       // matched. What we actually want is: convert the device-pixel
-      // coordinate back to CSS pixels (divide by dpi) so it can be used
-      // directly with `translate()` in CSS, which operates in CSS pixels.
-      let xpos = adjustedX / dpi;
-      let ypos = adjustedY / dpi;
+      // coordinate back to CSS pixels so it can be used directly with
+      // `translate()` in CSS, which operates in CSS pixels.
+      let xpos = adjustedX / scale;
+      let ypos = adjustedY / scale;
 
       pixels.push({ x: xpos, y: ypos, red: Math.round(red), green: Math.round(green), blue: Math.round(blue) })
     }
@@ -118,8 +129,12 @@ function drawCircle() {
 
 function imgData(x, y) {
   // x, y arrive in CSS pixels; the backing buffer is device pixels.
-  const px = Math.max(0, Math.min(canvas.width - 1, Math.round(x * dpi)));
-  const py = Math.max(0, Math.min(canvas.height - 1, Math.round(y * dpi)));
+  // Use canvas.width/size (the ratio actually in effect after radius
+  // rounding) rather than raw dpi, so sampling lines up exactly with
+  // where drawCircle() placed each color.
+  const scale = canvas.width / size;
+  const px = Math.max(0, Math.min(canvas.width - 1, Math.round(x * scale)));
+  const py = Math.max(0, Math.min(canvas.height - 1, Math.round(y * scale)));
   const imgData = ctx.getImageData(px, py, 1, 1);
   return imgData.data;
 }
