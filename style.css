@@ -12,6 +12,13 @@
   --text: #40445a;
   --text-muted: #7d8195;
   --overlay: rgba(40, 43, 56, 0.4);
+
+  /* flat surfaces inside the card use these instead of another shadow */
+  --tint: rgba(30, 33, 45, 0.045);
+  --tint-strong: rgba(30, 33, 45, 0.09);
+  --divider: rgba(30, 33, 45, 0.09);
+  --thumb-bg: #ffffff;
+  --thumb-border: rgba(30, 33, 45, 0.12);
 }
 
 :root[data-theme="dark"] {
@@ -21,6 +28,12 @@
   --text: #e6e7ec;
   --text-muted: #90939f;
   --overlay: rgba(0, 0, 0, 0.6);
+
+  --tint: rgba(255, 255, 255, 0.05);
+  --tint-strong: rgba(255, 255, 255, 0.1);
+  --divider: rgba(255, 255, 255, 0.08);
+  --thumb-bg: #4a505e;
+  --thumb-border: rgba(255, 255, 255, 0.14);
 }
 
 * {
@@ -63,74 +76,17 @@ body {
   letter-spacing: -.01em;
 }
 
-/* --- Neumorphic base shapes ---
-   Raised: the element pokes up out of the background.
-   Inset:  the element is pressed into the background (grooves, wells). */
-#theme-toggle,
-.card,
-#type,
-#main,
-.plate,
-#dialog ul li,
-input[type=range]::-webkit-slider-thumb,
-input[type=range]::-moz-range-thumb {
-  background: var(--bg);
-  box-shadow: 6px 6px 12px var(--shadow-d), -6px -6px 12px var(--shadow-l);
-  border: none;
-}
-
-input[type=text],
-input[type=range]::-webkit-slider-runnable-track,
-input[type=range]::-moz-range-track {
-  background: var(--bg);
-  box-shadow: inset 4px 4px 8px var(--shadow-d), inset -4px -4px 8px var(--shadow-l);
-  border: none;
-}
-
-#theme-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  height: 2.6rem;
-  width: 2.6rem;
-  border-radius: 50%;
-  color: var(--text);
-  cursor: pointer;
-  transition: box-shadow .15s ease, transform .15s ease;
-}
-
-#theme-toggle:hover {
-  transform: translateY(-1px);
-}
-
-#theme-toggle:active {
-  box-shadow: inset 4px 4px 8px var(--shadow-d), inset -4px -4px 8px var(--shadow-l);
-  transform: translateY(0);
-}
-
-#theme-toggle .icon {
-  height: 1.2rem;
-  width: 1.2rem;
-}
-
-#theme-toggle .icon-moon {
-  display: none;
-}
-
-:root[data-theme="dark"] #theme-toggle .icon-sun {
-  display: none;
-}
-
-:root[data-theme="dark"] #theme-toggle .icon-moon {
-  display: block;
-}
-
+/* --- The single neumorphic surface: only the card pops out of the page.
+   Everything living inside it is intentionally flat, so it reads as one
+   object rather than a pile of separately-raised buttons and swatches. --- */
 .card {
   width: 100%;
   max-width: 26rem;
+  background: var(--bg);
   border-radius: 1.75rem;
   padding: 1.75rem 1.75rem 1.25rem;
   overflow: hidden;
+  box-shadow: 10px 10px 20px var(--shadow-d), -10px -10px 20px var(--shadow-l);
   transition: box-shadow .3s ease, background .3s ease;
 }
 
@@ -149,7 +105,9 @@ input[type=range]::-moz-range-track {
   border-radius: 50%;
   max-width: 100%;
   height: auto;
-  box-shadow: 6px 6px 14px var(--shadow-d), -6px -6px 14px var(--shadow-l);
+  /* seated into the card with a soft inset ring, rather than popping out
+     with its own raised shadow */
+  box-shadow: inset 3px 3px 8px var(--shadow-d), inset -3px -3px 8px var(--shadow-l);
 }
 
 #canvas2 {
@@ -192,6 +150,30 @@ input[type=range] {
   background: transparent;
 }
 
+/* Track: a shallow groove pressed into the card, filled with the hue
+   gradient — this is a functional well, so a little inset depth earns
+   its keep even though the rest of the card stays flat. */
+input[type=range]::-webkit-slider-runnable-track {
+  border-radius: 1rem;
+  height: 1.4rem;
+  background-image: var(--rangebg);
+  background-color: transparent;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, .25), inset -1px -1px 3px rgba(255, 255, 255, .12);
+}
+
+input[type=range]::-moz-range-track {
+  border-radius: 1rem;
+  height: 1.4rem;
+  background-image: var(--rangebg);
+  background-color: transparent;
+  box-shadow: inset 2px 2px 5px rgba(0, 0, 0, .25), inset -1px -1px 3px rgba(255, 255, 255, .12);
+}
+
+/* Thumb: BUG FIX — this used to share the exact same background and
+   shadow colors as the card (`var(--bg)` + the card's own raised
+   shadow), so on top of the card it was nearly invisible. It now uses
+   its own light/dark surface color that always contrasts with --bg,
+   plus a thin border for a crisp edge against any hue on the track. */
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -200,12 +182,15 @@ input[type=range]::-webkit-slider-thumb {
   border-radius: 50%;
   cursor: pointer;
   position: relative;
-  top: -.2rem;
-  transition: transform .15s ease;
+  top: -.25rem;
+  background: var(--thumb-bg);
+  border: 1px solid var(--thumb-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .28);
+  transition: transform .15s ease, background .3s ease;
 }
 
 input[type=range]::-webkit-slider-thumb:active {
-  transform: scale(1.06);
+  transform: scale(1.08);
 }
 
 input[type=range]::-moz-range-thumb {
@@ -213,30 +198,55 @@ input[type=range]::-moz-range-thumb {
   width: 1.9rem;
   border-radius: 50%;
   cursor: pointer;
+  background: var(--thumb-bg);
+  border: 1px solid var(--thumb-border);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .28);
 }
 
-input[type=range]::-webkit-slider-runnable-track {
-  border-radius: 1rem;
-  height: 1.5rem;
-  background-image: var(--rangebg);
-  background-color: transparent;
+#theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 2.6rem;
+  width: 2.6rem;
+  border-radius: 50%;
+  color: var(--text);
+  background: transparent;
+  cursor: pointer;
+  transition: background .15s ease;
 }
 
-input[type=range]::-moz-range-track {
-  border-radius: 1rem;
-  height: 1.5rem;
-  background-image: var(--rangebg);
-  background-color: transparent;
+#theme-toggle:hover {
+  background: var(--tint);
+}
+
+#theme-toggle:active {
+  background: var(--tint-strong);
+}
+
+#theme-toggle .icon {
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+#theme-toggle .icon-moon {
+  display: none;
+}
+
+:root[data-theme="dark"] #theme-toggle .icon-sun {
+  display: none;
+}
+
+:root[data-theme="dark"] #theme-toggle .icon-moon {
+  display: block;
 }
 
 #main {
-  height: 3.2rem;
-  width: 3.2rem;
+  height: 2.9rem;
+  width: 2.9rem;
   border-radius: 50%;
   background-color: var(--m_color);
-  /* a solid ring of page-background color inset along the edge frames
-     the swatch like a bezel, on top of the usual raised drop shadow */
-  box-shadow: 6px 6px 12px var(--shadow-d), -6px -6px 12px var(--shadow-l), inset 0 0 0 4px var(--bg);
+  box-shadow: inset 0 0 0 2px var(--divider), 0 1px 3px rgba(0, 0, 0, .15);
   transition: background-color .1s ease;
 }
 
@@ -244,12 +254,16 @@ input[type=text] {
   height: 2.9rem;
   width: 100%;
   border-radius: .9rem;
+  background: var(--bg);
   color: var(--text);
   text-align: center;
   padding: .2rem;
   font-size: 1rem;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   letter-spacing: .04em;
+  /* functional input well, kept flat elsewhere in the card */
+  box-shadow: inset 2px 2px 5px var(--shadow-d), inset -2px -2px 5px var(--shadow-l);
+  border: none;
 }
 
 input[type=text]:hover,
@@ -265,19 +279,20 @@ input[type=text]:focus {
   border-radius: .9rem;
   position: relative;
   color: var(--text);
+  background: transparent;
+  border: 1px solid var(--divider);
   cursor: pointer;
   text-transform: capitalize;
   user-select: none;
-  transition: box-shadow .15s ease, transform .15s ease;
+  transition: background .15s ease;
 }
 
 #type:hover {
-  transform: translateY(-1px);
+  background: var(--tint);
 }
 
 #type:active {
-  box-shadow: inset 4px 4px 8px var(--shadow-d), inset -4px -4px 8px var(--shadow-l);
-  transform: translateY(0);
+  background: var(--tint-strong);
 }
 
 #type::after {
@@ -307,6 +322,9 @@ input[type=text]:focus {
   z-index: 10;
 }
 
+/* The sheet is a separate floating surface (not "inside the card"), so
+   it keeps its own elevation — that's the one other legitimate shadow
+   in the UI, standard for a surface overlaying everything else. */
 .sheet {
   background: var(--bg);
   width: 100%;
@@ -315,7 +333,7 @@ input[type=text]:focus {
   border-radius: 1.75rem 1.75rem 0 0;
   padding: .75rem 1.25rem calc(1rem + env(safe-area-inset-bottom, 0px));
   transform: translateY(100%);
-  transition: transform .3s cubic-bezier(.32, .72, 0, 1);
+  transition: transform .3s cubic-bezier(.32, .72, 0, 1), background .3s ease;
   box-shadow: 0 -10px 30px var(--shadow-d);
 }
 
@@ -347,23 +365,27 @@ input[type=text]:focus {
   margin: 0;
   list-style: none;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
 }
 
 #dialog ul li {
   padding: .9rem 1.1rem;
-  border-radius: 1rem;
+  border-radius: .8rem;
   color: var(--text);
   text-transform: capitalize;
   cursor: pointer;
-  transition: box-shadow .1s ease, transform .1s ease;
+  transition: background .1s ease;
+}
+
+#dialog ul li + li {
+  margin-top: .15rem;
+}
+
+#dialog ul li:hover {
+  background: var(--tint);
 }
 
 #dialog ul li:active {
-  box-shadow: inset 4px 4px 8px var(--shadow-d), inset -4px -4px 8px var(--shadow-l);
-  transform: scale(.99);
+  background: var(--tint-strong);
 }
 
 .hide {
@@ -383,9 +405,9 @@ input[type=text]:focus {
 .plate {
   flex: 1 1 6rem;
   box-sizing: border-box;
-  border-radius: 1.1rem;
-  padding: .4rem;
-  transition: box-shadow .2s ease;
+  border-radius: 1rem;
+  border: 1px solid var(--divider);
+  padding: .35rem;
 }
 
 .code {
@@ -405,7 +427,7 @@ input[type=text]:focus {
   height: 2.6rem !important;
   width: 100%;
   box-sizing: border-box;
-  border-radius: .7rem;
+  border-radius: .65rem;
 }
 
 .footer {
