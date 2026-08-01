@@ -157,20 +157,43 @@ _canvas.addEventListener('pointermove', (e) => {
 _canvas.addEventListener('pointerup', () => { dragging = false; });
 _canvas.addEventListener('pointercancel', () => { dragging = false; });
 
-dialog.addEventListener('click', function() {
+// BUG FIX: the dialog's own click listener used to toggle open/closed on
+// every click inside it -- but list items live inside the dialog, so
+// selecting one bubbled the click up to this same listener, which
+// immediately re-toggled things back open right after changeMode() had
+// just closed it. Checking that the click target IS the backdrop (not a
+// bubbled child) fixes that, and using explicit open/close functions
+// instead of toggling avoids this class of state-desync bug entirely.
+function openDialog() {
+  dialog.classList.remove('hide');
+  const sheet = dialog.firstElementChild;
+  // Double rAF forces a reflow after removing `hide` so the transform
+  // transition actually animates in, instead of snapping straight to
+  // the open position.
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    sheet.classList.add('slide-in');
+    dialog.style.background = 'var(--overlay)';
+  }));
+}
+
+function closeDialog() {
   dialog.style.background = 'transparent';
-  const list = dialog.firstElementChild;
-  list.classList.toggle('slide-in');
-  setTimeout(() => dialog.classList.toggle('hide'), 200)
+  const sheet = dialog.firstElementChild;
+  sheet.classList.remove('slide-in');
+  setTimeout(() => dialog.classList.add('hide'), 200);
+}
+
+dialog.addEventListener('click', function(event) {
+  if (event.target !== dialog) return;
+  closeDialog();
 })
-type.addEventListener('click', function() {
-  dialog.classList.toggle('hide');
-  const list = dialog.firstElementChild;
-  setTimeout(() => {
-    list.classList.toggle('slide-in')
-    dialog.style.background = 'rgba(0,0,0,.3)'
-  }, 100)
-})
+type.addEventListener('click', openDialog);
+type.addEventListener('keydown', function(event) {
+  if (event.key === 'Enter' || event.key === ' ') {
+    event.preventDefault();
+    openDialog();
+  }
+});
 
 for (let item of items) {
   item.addEventListener('click', changeMode, false)
@@ -194,8 +217,7 @@ function changeMode() {
     lightness(0)
     hexChange();
   }
-  dialog.classList.add('hide');
-  dialog.firstElementChild.classList.remove('slide-in');
+  closeDialog();
 }
 
 function updatePicker(event) {
